@@ -1,0 +1,33 @@
+name: Build LaTeX (LuaLaTeX) & Upload PDF
+
+on:
+  push:
+    branches:
+      - "**"
+    tags:
+      - "v*"
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+      - name: Generate revision.tex
+        run: |
+          echo "\\renewcommand{\\revisiondate}{`git log -1 --format=\"%ad\" --date=short $(pwd)`}" > $GITHUB_WORKSPACE/revision.tex
+          echo "\\renewcommand{\\revision}{`git log -1 --format=\"%h\" $(pwd)`}" >> $GITHUB_WORKSPACE/revision.tex
+      - name: Build PDF with LuaLaTeX
+        uses: xu-cheng/latex-action@v4
+        with:
+          root_file: document.tex
+          latexmk_use_lualatex: true
+          extra_system_packages: "font-fira-code-nerd"
+          extra_fonts: |
+            /usr/share/fonts/fira-code-nerd/*.ttf
+      - name: Upload PDF file
+        uses: actions/upload-artifact@v4
+        with:
+          name: PDF
+          path: document.pdf
